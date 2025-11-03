@@ -1,0 +1,298 @@
+openapi: 3.0.0
+info:
+  title: E-Commerce API
+  description: >-
+    Collection lengkap untuk testing E-Commerce API dengan environment
+    variables, tests, dan pre-request scripts
+  version: 1.0.0
+servers:
+  - url: http://{{baseurl}}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+tags:
+  - name: 🔐 Authentication
+    description: Endpoints untuk register dan login user
+  - name: 📦 Products
+    description: CRUD operations untuk produk
+  - name: 🛒 Orders
+    description: Manajemen order dan checkout
+paths:
+  /auth/register:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: Register User
+      description: >-
+        Register user baru dengan email unik (menggunakan Postman dynamic
+        variables)
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"email\": \"{{$randomEmail}}\",\n  \"password\":
+                \"SecurePass123!\",\n  \"name\": \"{{$randomFullName}}\",\n 
+                \"phone\": \"+628{{$randomInt}}\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/login:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: Login User
+      description: Login dengan kredensial yang sudah terdaftar
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"email\": \"user@example.com\",\n  \"password\":
+                \"SecurePass123!\"\n}"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /auth/me:
+    get:
+      tags:
+        - 🔐 Authentication
+      summary: Get Current User Profile
+      description: Get user profile yang sedang login (requires authentication)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /products:
+    get:
+      tags:
+        - 📦 Products
+      summary: Get All Products
+      description: Get list semua produk dengan pagination dan filter options
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+          description: Page number
+          example: '1'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          description: Items per page
+          example: '10'
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: 'Sort order: price_asc, price_desc, name_asc, name_desc, newest'
+          example: price_asc
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    post:
+      tags:
+        - 📦 Products
+      summary: Create Product
+      description: Create produk baru (requires authentication & admin role)
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"name\": \"{{$randomProductName}}\",\n  \"description\":
+                \"{{$randomLoremSentence}}\",\n  \"price\": {{$randomInt}},\n 
+                \"stock\": {{$randomInt}},\n  \"category\": \"Electronics\",\n 
+                \"images\": [\n    \"https://example.com/image1.jpg\",\n   
+                \"https://example.com/image2.jpg\"\n  ]\n}"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json: {}
+  /products/{productId}:
+    get:
+      tags:
+        - 📦 Products
+      summary: Get Product by ID
+      description: Get detail produk berdasarkan ID
+      parameters:
+        - name: productId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    put:
+      tags:
+        - 📦 Products
+      summary: Update Product
+      description: Update existing product
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"name\": \"Updated Product Name\",\n  \"price\":
+                12000000,\n  \"stock\": 15\n}"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: productId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - 📦 Products
+      summary: Delete Product
+      description: Delete product by ID (requires authentication & admin role)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders:
+    get:
+      tags:
+        - 🛒 Orders
+      summary: Get My Orders
+      description: Get list order dari user yang sedang login
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    post:
+      tags:
+        - 🛒 Orders
+      summary: Create Order
+      description: Create order baru dengan items dan shipping address
+      requestBody:
+        content:
+          '*/*':
+            schema:
+              type: string
+              example: >-
+                "{\n  \"items\": [\n    {\n      \"productId\":
+                \"{{productId}}\",\n      \"quantity\": 2\n    }\n  ],\n 
+                \"shippingAddress\": {\n    \"street\": \"Jl. Sudirman No.
+                123\",\n    \"city\": \"Jakarta\",\n    \"province\": \"DKI
+                Jakarta\",\n    \"postalCode\": \"12345\",\n    \"country\":
+                \"Indonesia\"\n  }\n}"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+      responses:
+        '201':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/{orderId}:
+    get:
+      tags:
+        - 🛒 Orders
+      summary: Get Order by ID
+      description: Get detail order by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: '{{orderId}}'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/{orderId}/cancel:
+    patch:
+      tags:
+        - 🛒 Orders
+      summary: Cancel Order
+      description: Cancel order yang masih berstatus pending
+      requestBody:
+        content: {}
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: '{{orderId}}'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
